@@ -16,7 +16,7 @@ app.get('/', (req, res, next) => {
 
     Medico.find({}) // obtener todos los cambpos de la tabla
         .skip(desde)
-        .limit(2)
+        .limit(5)
         .populate('usuario', 'nombre email')
         .populate('hospital')
         .exec(
@@ -43,6 +43,31 @@ app.get('/', (req, res, next) => {
             })
 });
 
+// Obtener Medico
+app.get('/:id', (req, res) => {
+    var id = req.params.id;
+
+    Medico.findById(id)
+        .populate('usuario', 'nombre email img') // tabla, campos
+        .populate('hospital')
+        .exec((err, medico) => {
+
+            if (err) {
+                return res.status(500).json({
+                    ok: false,
+                    mensaje: 'Error al crear medico',
+                    errors: err
+                })
+            }
+
+            res.status(200).json({
+                ok: true,
+                medico: medico
+            });
+
+        });
+})
+
 
 
 // Crear un nuevo medico
@@ -57,19 +82,28 @@ app.post('/', mdAutenticacion.verificaToken, (req, res) => {
     });
 
     medico.save((err, medicoGuardado) => {
-
         if (err) {
-            return res.status(400).json({
+            return res.status(500).json({
                 ok: false,
-                mensaje: 'Error al crear medico',
+                mensaje: 'Error al buscar medico',
                 errors: err
             })
         }
 
-        res.status(201).json({
+        if (!medico) {
+            return res.status(400).json({
+                ok: false,
+                mensaje: 'El medico con el id ' + id + 'no existe',
+                errors: { mensaje: 'No existe un medico con ese ID' }
+            })
+        }
+
+        res.status(200).json({
             ok: true,
             medico: medicoGuardado
         });
+
+
 
     });
 
